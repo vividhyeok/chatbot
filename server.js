@@ -23,6 +23,11 @@ app.use(express.static(path.join(__dirname)));
 // API 요청의 JSON 본문을 파싱합니다.
 app.use(express.json());
 
+// 루트 경로 GET 요청을 명시적으로 처리하여 배포 환경에서 404를 방지합니다.
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 
 // --- 채팅을 위한 API 엔드포인트 ---
 app.post('/chat', async (req, res) => {
