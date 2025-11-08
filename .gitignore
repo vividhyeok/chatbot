@@ -1,0 +1,70 @@
+# Node.js / JavaScript 기본 무시 항목
+node_modules/
+
+# 환경 변수/비밀 키
+.env
+.env.*
+!.env.example
+
+# 로그 / 디버그 출력
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS / 편집기별 파일
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+*.iml
+
+# 빌드 / 캐시 / 임시
+.dist/
+dist/
+build/
+out/
+coverage/
+.cache/
+.parcel-cache/
+.next/
+.vercel/
+.svelte-kit/
+rollup.cache
+.eslintcache
+stylelintcache
+.tmp/
+tmp/
+
+# 패키지 매니저 아티팩트
+*.tgz
+package-lock.json
+# 위 줄을 주석처리하면 lock 파일을 추적하게 됩니다.
+
+# 테스트 관련
+.nyc_output/
+.jest-cache/
+.jest-test-results.json
+reports/
+
+# TypeScript
+*.tsbuildinfo
+
+# 기타
+*.local
+*.log
+logs/
+
+# 이미지 편집기/디자인 도구 임시
+*.psd
+*.ai
+*.sketch
+
+# Git merge/충돌 백업
+*.orig
+
+# Optional: 생산 서버에서만 생성되는 파일 예시
+# server.log

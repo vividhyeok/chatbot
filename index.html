@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>간단한 챗봇</title>
+    <style>
+        /* 전체 페이지 스타일 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* 뷰포트 높이의 100% */
+        }
+        /* 챗봇 컨테이너 스타일 */
+        .chat-container {
+            width: 100%;
+            max-width: 600px; /* 최대 너비 설정 */
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+            border-radius: 8px; /* 둥근 모서리 */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 80vh; /* 뷰포트 높이의 80% (필요에 따라 조절) */
+        }
+        /* 메시지 표시 영역 스타일 */
+        .chat-messages {
+            flex-grow: 1; /* 남은 공간을 모두 차지 */
+            padding: 20px;
+            overflow-y: auto; /* 내용이 넘치면 스크롤 */
+            border-bottom: 1px solid #eee; /* 하단 구분선 */
+        }
+        /* 개별 메시지 스타일 */
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 15px; /* 둥근 메시지 버블 */
+            max-width: 70%; /* 메시지 최대 너비 */
+            word-wrap: break-word; /* 긴 단어 자동 줄바꿈 */
+        }
+        /* 사용자 메시지 스타일 */
+        .message.user {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end; /* 오른쪽 정렬 */
+            margin-left: auto; /* 오른쪽으로 밀기 */
+        }
+        /* 봇 메시지 스타일 */
+        .message.bot {
+            background-color: #e2e6ea;
+            color: #333;
+            align-self: flex-start; /* 왼쪽 정렬 */
+            margin-right: auto; /* 왼쪽으로 밀기 */
+        }
+        /* 채팅 입력 영역 스타일 */
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #eee; /* 상단 구분선 */
+        }
+        /* 입력 필드 스타일 */
+        .chat-input input {
+            flex-grow: 1; /* 남은 공간을 모두 차지 */
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px; /* 둥근 입력 필드 */
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        /* 전송 버튼 스타일 */
+        .chat-input button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 20px; /* 둥근 버튼 */
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease; /* 호버 효과 */
+        }
+        .chat-input button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-messages" id="chat-messages">
+            <!-- 채팅 메시지가 여기에 추가됩니다 -->
+            <div class="message bot">안녕하세요! 무엇을 도와드릴까요?</div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="메시지를 입력하세요...">
+            <button id="send-button">전송</button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+
+        // OpenAI API 형식에 맞춰 대화 기록을 저장하는 배열입니다.
+        let conversationHistory = [
+            { role: 'assistant', content: '안녕하세요! 무엇을 도와드릴까요?' }
+        ];
+
+        // 채팅창에 메시지를 렌더링하는 함수입니다.
+        function appendMessage(role, content) {
+            // 사용자 메시지는 'user', 봇 메시지는 'bot' 클래스를 사용합니다.
+            const senderClass = role === 'user' ? 'user' : 'bot';
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', senderClass);
+            messageElement.textContent = content;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // 자동 스크롤
+        }
+
+        // 서버로부터 봇의 응답을 가져오는 함수입니다.
+        async function getBotResponse(message) {
+            try {
+                // '/chat' 엔드포인트로 POST 요청을 보냅니다.
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    // 새로운 메시지와 전체 대화 기록을 함께 보냅니다.
+                    body: JSON.stringify({
+                        message: message,
+                        history: conversationHistory
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP 오류! 상태: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const botReply = data.reply;
+
+                // 봇의 응답을 대화 기록에 추가하고 화면에 표시합니다.
+                conversationHistory.push({ role: 'assistant', content: botReply });
+                appendMessage('assistant', botReply);
+
+            } catch (error) {
+                console.error('봇 응답을 가져오는 중 오류 발생:', error);
+                appendMessage('bot', '죄송합니다. 오류가 발생했습니다. 다시 시도해주세요.');
+            }
+        }
+
+        // 사용자가 메시지를 보낼 때 처리하는 함수입니다.
+        function handleUserInput() {
+            const message = userInput.value.trim();
+            if (message === '') return;
+
+            // 사용자의 메시지를 대화 기록에 추가하고 화면에 표시합니다.
+            appendMessage('user', message);
+            conversationHistory.push({ role: 'user', content: message });
+            userInput.value = '';
+
+            // 서버로부터 봇의 응답을 가져옵니다.
+            getBotResponse(message);
+        }
+
+        // --- 이벤트 리스너 설정 ---
+        sendButton.addEventListener('click', handleUserInput); // 전송 버튼 클릭
+        userInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') { // 엔터 키 입력
+                handleUserInput();
+            }
+        });
+
+        // 초기 입력 필드에 포커스
+        userInput.focus();
+    </script>
+</body>
+</html>
